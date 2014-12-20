@@ -171,9 +171,9 @@ public class ChatServer {
       return false;
 
     // Decode message
-    String message = decoder.decode(inBuffer).toString();
-    System.out.print(message);
-
+    String message = decoder.decode(inBuffer).toString().trim();
+    //ChatUser sender = (ChatUser)userMap.get(sc);
+    
     return true;
   }
 }
