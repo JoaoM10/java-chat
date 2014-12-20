@@ -62,7 +62,7 @@ public class ChatMessage {
         finalMsg = this.messageFirstPart + " left the room!";      
         break;
       case BYE:
-        finalMsg = "Leaving is not always easy but it has to be done sometimes. Bye!";
+        finalMsg = "Leaving is not always easy but it has to be done sometimes. Bye! Press enter to quit...";
         break;
       case PRIVATE:
         finalMsg = "(Private) " + this.messageFirstPart + ": " + this.messageSecondPart;      
