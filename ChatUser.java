@@ -42,5 +42,16 @@ public class ChatUser {
     this.room = null;
   }
 
+  public UserState getState() {
+    return this.userState;
+  }
 
+  public String getNick() {
+    return this.nick;
+  }
+
+  public ChatRoom getRoom() {
+    return this.room;
+  }
+  
 }

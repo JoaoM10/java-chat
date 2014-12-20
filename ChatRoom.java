@@ -24,6 +24,8 @@ public class ChatRoom {
   // Room info
 
 
-
+  public ChatUser[] getUsers() {
+    return (new ChatUser[0]);
+  }
 
 }

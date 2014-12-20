@@ -158,8 +158,41 @@ public class ChatServer {
     }
   }
 
+  // Process command
+  private static void processCommand(String message, ChatUser sender) {
+    String[] msgParts = message.split(" ");
+
+    if(msgParts[0].equals("/nick")) {
+      // check name
+    } else if(msgParts[0].equals("/join")) {
+      // check room
+    } else if(msgParts[0].equals("/leave")) {
+
+    } else if(msgParts[0].equals("/bye")) {
+
+    } else {
+
+    }
+    
+  }
+  
+  // Process message (not a command)
+  private static void processMessage(String message, ChatUser sender) {
+
+    if (sender.getState() == UserState.INSIDE) {
+
+      ChatUser[] usersSameRoom = sender.getRoom().getUsers();
+      for (ChatUser user : usersSameRoom)
+        ;//sendMessage(user, sender.getNick(), message);
+      
+    }
+    else
+      ;//sendError(sender, "You need to be in a room to send messages!");
+    
+  }
+  
   // Process input
-  static private boolean processInput(SocketChannel socketChannel) throws IOException {
+  private static boolean processInput(SocketChannel socketChannel) throws IOException {
 
     // Read the message to the buffer
     inBuffer.clear();
@@ -172,8 +205,13 @@ public class ChatServer {
 
     // Decode message
     String message = decoder.decode(inBuffer).toString().trim();
-    //ChatUser sender = (ChatUser)userMap.get(sc);
-    
+    ChatUser sender = users.get(socketChannel);
+
+    if(message.charAt(0) == '/')
+      processCommand(message, sender);
+    else
+      processMessage(message, sender);
+  
     return true;
   }
 }
