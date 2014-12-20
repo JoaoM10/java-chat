@@ -26,7 +26,7 @@ import java.util.regex.*;
 
 enum UserState { INIT, OUTSIDE, INSIDE }
 
-public class ChatUser {
+public class ChatUser implements Comparable<ChatUser> {
 
   // User info
   private String nick;
@@ -42,6 +42,12 @@ public class ChatUser {
     this.room = null;
   }
 
+  // Overrides compareTo to implement comparable (needed because of HashMap)
+  @Override
+  public int compareTo(ChatUser a) {
+    return this.nick.compareTo(a.nick);
+  }
+  
   public UserState getState() {
     return this.userState;
   }
@@ -52,6 +58,18 @@ public class ChatUser {
 
   public ChatRoom getRoom() {
     return this.room;
+  }
+
+  public SocketChannel getSocketChannel() {
+    return this.socketChannel;
+  }
+
+  public void setState(UserState newState) {
+    this.userState = newState;
+  }
+  
+  public void setNick(String newNick) {
+    this.nick = newNick;
   }
   
 }

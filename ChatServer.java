@@ -57,6 +57,45 @@ public class ChatServer {
     Integer iport = Integer.parseInt(port);
     return (iport >= 0 && iport <= 65535);
   }  
+
+  // Close connection to client
+  public static void closeClient(SocketChannel socketChannel) throws IOException {
+    
+    Socket socket = socketChannel.socket();
+
+    try {
+      System.out.println("Closing connection to " + socket);
+      socketChannel.close();
+    } catch (IOException ex) {
+      System.err.println("Error closing socket " + socket + "! (" + ex + ")");
+    }
+
+    // If closed before adding it to users
+    if (!users.containsKey(socketChannel))
+      return;
+
+    ChatUser user = users.get(socketChannel);
+
+    // May need to leave room
+    if (user.getState() == UserState.INSIDE) {
+      
+      ChatRoom userRoom = user.getRoom();
+      userRoom.userLeft(user);
+      ChatUser[] usersSameRoom = userRoom.getUsers();
+      ChatMessage chatMessage = new ChatMessage(MessageType.LEFT, user.getNick(), "");
+      for (ChatUser to : usersSameRoom)
+        sendMessage(to.getSocketChannel(), chatMessage);
+      
+      // Room can become empty
+      if (usersSameRoom.length == 0)
+        rooms.remove(userRoom.getName());
+      
+    }
+
+    // Remove user from users and nicks info
+    nicks.remove(user.getNick());
+    users.remove(socketChannel);
+  }
   
   // Server Main  
   public static void main(String args[]) throws Exception {
@@ -158,37 +197,186 @@ public class ChatServer {
     }
   }
 
+  // Send message on socket channel
+  private static void sendMessage(SocketChannel socketChannel, ChatMessage message) throws IOException {
+    socketChannel.write(encoder.encode(CharBuffer.wrap(message.toString(false))));
+  }
+
+  // Send error message to user
+  private static void sendError(ChatUser to, String message) throws IOException  {
+    ChatMessage chatMessage = new ChatMessage(MessageType.ERROR, message, "");
+    sendMessage(to.getSocketChannel(), chatMessage);
+  }
+
+  // Send OK message to user
+  private static void sendOk(ChatUser to) throws IOException  {
+    ChatMessage chatMessage = new ChatMessage(MessageType.OK, "", "");
+    sendMessage(to.getSocketChannel(), chatMessage);
+  }
+
+  // Send Bye message to user
+  private static void sendBye(ChatUser to) throws IOException  {
+    ChatMessage chatMessage = new ChatMessage(MessageType.BYE, "", "");
+    sendMessage(to.getSocketChannel(), chatMessage);
+  }
+  
   // Process command
-  private static void processCommand(String message, ChatUser sender) {
+  private static void processCommand(String message, ChatUser sender) throws IOException  {
     String[] msgParts = message.split(" ");
 
     if(msgParts[0].equals("/nick")) {
-      // check name
+
+      // Check command syntax
+      if (msgParts.length != 2) {
+        sendError(sender, "Invalid usage of this command: You need to provide a nick!");
+        return;
+      }
+
+      String newNick = msgParts[1];
+
+      // Check if the nick is already in use
+      if (nicks.containsKey(newNick)){
+        sendError(sender, "This nick is already in use!");
+        return;
+      }
+
+      // Update
+      String oldNick = sender.getNick();
+      nicks.remove(oldNick);
+      sender.setNick(newNick);
+      nicks.put(newNick, sender);
+      sendOk(sender);
+
+      if(sender.getState() == UserState.INIT)
+        sender.setState(UserState.OUTSIDE);
+      else if (sender.getState() == UserState.INSIDE) {
+        ChatUser[] usersSameRoom = sender.getRoom().getUsers();
+        ChatMessage chatMessage = new ChatMessage(MessageType.NEWNICK, oldNick, newNick);
+        
+        for (ChatUser to : usersSameRoom)
+          if (sender != to)
+            sendMessage(to.getSocketChannel(), chatMessage);
+      }
+      
     } else if(msgParts[0].equals("/join")) {
-      // check room
+
+      // Check command syntax
+      if (msgParts.length != 2) {
+        sendError(sender, "Invalid usage of this command: You need to provide a room name!");
+        return;
+      }
+
+      // Make sure user is not in INIT state
+      if (sender.getState() == UserState.INIT){
+        sendError(sender, "You need to define a nick before joining a room!");
+        return;
+      }
+      
+      // If already on a room, leave it
+      if (sender.getState() == UserState.INSIDE) {
+        ChatRoom senderRoom = sender.getRoom();
+        senderRoom.userLeft(sender);
+        
+        ChatUser[] usersSameRoom = senderRoom.getUsers();
+        ChatMessage chatMessage = new ChatMessage(MessageType.LEFT, sender.getNick(), "");
+        
+        for (ChatUser to : usersSameRoom)
+          sendMessage(to.getSocketChannel(), chatMessage);   
+
+        if (usersSameRoom.length == 0)
+          rooms.remove(senderRoom.getName());
+
+        sender.setState(UserState.OUTSIDE);
+      }
+      
+      // Join room
+      String roomName = msgParts[1];
+
+      // Create room if necessary
+      if (!rooms.containsKey(roomName))
+        rooms.put(roomName, new ChatRoom(roomName));
+
+      ChatRoom senderRoom = rooms.get(roomName);
+
+      ChatMessage chatMessage = new ChatMessage(MessageType.JOINED, sender.getNick(), "");
+      ChatUser[] usersSameRoom = senderRoom.getUsers();
+      for (ChatUser to : usersSameRoom)
+          sendMessage(to.getSocketChannel(), chatMessage);  
+      
+      senderRoom.userJoin(sender);
+      sender.setState(UserState.INSIDE);
+      sendOk(sender);
+      
     } else if(msgParts[0].equals("/leave")) {
 
+      if (sender.getState() == UserState.INSIDE) {
+        ChatRoom senderRoom = sender.getRoom();
+        senderRoom.userLeft(sender);
+        
+        ChatUser[] usersSameRoom = senderRoom.getUsers();
+        ChatMessage chatMessage = new ChatMessage(MessageType.LEFT, sender.getNick(), "");
+        
+        for (ChatUser to : usersSameRoom)
+          sendMessage(to.getSocketChannel(), chatMessage);   
+
+        if (usersSameRoom.length == 0)
+          rooms.remove(senderRoom.getName());
+
+        sender.setState(UserState.OUTSIDE);
+        sendOk(sender);
+        
+      } else {
+        sendError(sender, "You are not inside any room!");
+      }
+      
     } else if(msgParts[0].equals("/bye")) {
+      
+      sendBye(sender);
+      closeClient(sender.getSocketChannel());
 
+    } else if(msgParts[0].equals("/priv")) {
+
+      // Check command syntax
+      if (msgParts.length < 2) {
+        sendError(sender, "Invalid usage of this command: You need to provide a destinary nick to send a PM!");
+        return;
+      }
+
+      // Check if user exists
+      String toNick = msgParts[1];
+      if (!nicks.containsKey(toNick)) {
+        sendError(sender, "The nick you provided does not exist!");
+        return;
+      }
+
+      // Send message
+      String finalMessage = "";
+      for (int i = 2; i < msgParts.length; i ++) {
+        if (i > 2)
+          finalMessage += " ";
+        finalMessage += msgParts[i];
+      }
+      ChatMessage chatMessage = new ChatMessage(MessageType.PRIVATE, sender.getNick(), finalMessage);
+      sendMessage(nicks.get(toNick).getSocketChannel(), chatMessage);
+      sendOk(sender);
+      
     } else {
-
+      sendError(sender, "Invalid command!");
     }
     
   }
   
   // Process message (not a command)
-  private static void processMessage(String message, ChatUser sender) {
-
+  private static void processMessage(String message, ChatUser sender) throws IOException  {
     if (sender.getState() == UserState.INSIDE) {
-
       ChatUser[] usersSameRoom = sender.getRoom().getUsers();
-      for (ChatUser user : usersSameRoom)
-        ;//sendMessage(user, sender.getNick(), message);
-      
+      for (ChatUser to : usersSameRoom){
+        ChatMessage chatMessage = new ChatMessage(MessageType.MESSAGE, sender.getNick(), message);
+        sendMessage(to.getSocketChannel(), chatMessage);
+      }
     }
     else
-      ;//sendError(sender, "You need to be in a room to send messages!");
-    
+      sendError(sender, "You need to be in a room to send messages!");
   }
   
   // Process input

@@ -22,10 +22,31 @@ import java.util.*;
 public class ChatRoom {
 
   // Room info
+  private String name;
+  private Set<ChatUser> users;
 
+  // Initialize room
+  public ChatRoom(String _name) {
+    this.name = _name;
+    this.users = new TreeSet<ChatUser>();
+  }
 
   public ChatUser[] getUsers() {
-    return (new ChatUser[0]);
+    return this.users.toArray(new ChatUser[this.users.size()]);
+  }
+
+  public String getName() {
+    return this.name;
+  }
+
+  // User entered this room
+  public void userJoin(ChatUser user) {
+    this.users.add(user);
+  }
+
+  // User left this room
+  public void userLeft(ChatUser user) {
+    this.users.remove(user);
   }
 
 }
