@@ -21,7 +21,7 @@ import java.util.*;
 //                 ^~- . -  ~^ 
 
 
-enum MessageType { OK, ERROR, MESSAGE, NEWNICK, JOINED, LEFT, BYE, PRIVATE, UNDEFINED }
+enum MessageType { OK, ERROR, MESSAGE, NEWNICK, JOINED, LEFT, BYE, PRIVATE }
 
 public class ChatMessage {
 
@@ -105,7 +105,7 @@ public class ChatMessage {
 
   // Parse message
   public static ChatMessage parseString(String unparsedMessage) {
-    MessageType _messageType = MessageType.UNDEFINED;
+    MessageType _messageType = null;
     String _messageFirstPart = "";
     String _messageSecondPart = "";
 
