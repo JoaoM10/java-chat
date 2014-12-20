@@ -160,32 +160,17 @@ public class ChatServer {
               socketChannel = (SocketChannel) key.channel();
               boolean ok = processInput(socketChannel);
 
-              // If the connection is dead, remove it from the selector and close it
+              // If the connection is dead, remove it from the selector and close it, and remove user also
               if (!ok) {
                 key.cancel();
-
-                Socket socket = null;
-                try {
-                  socket = socketChannel.socket();
-                  System.out.println("Closing connection to " + socket);
-                  socket.close();
-                } catch(IOException ex) {
-                  System.err.println("Error closing socket " + socket + ": " + ex);
-                }
+                closeClient(socketChannel);
               }
 
             } catch(IOException ex) {
 
-              // On exception, remove this channel from the selector
+              // On exception, remove this channel from the selector and remove user
               key.cancel();
-
-              try {
-                socketChannel.close();
-              } catch(IOException ex2) {
-                System.err.println("Error closing socket channel " + ex2);
-              }
-
-              System.out.println("Closed " + socketChannel);
+              closeClient(socketChannel);
             }
           }
         }
