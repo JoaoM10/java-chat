@@ -118,7 +118,12 @@ public class ChatMessage {
     } else if (msgParts[0].equals("MESSAGE")) {
       _messageType = MessageType.MESSAGE;
       _messageFirstPart = msgParts[1];
-      _messageSecondPart = msgParts[2];
+      String finalMessage = "";
+      for (int i = 2; i < msgParts.length; i ++) {
+        if (i > 2) finalMessage += " ";
+        finalMessage += msgParts[i];
+      }
+      _messageSecondPart = finalMessage;
     } else if (msgParts[0].equals("NEWNICK")) {
       _messageType = MessageType.NEWNICK;
       _messageFirstPart = msgParts[1];
@@ -134,7 +139,13 @@ public class ChatMessage {
     } else if (msgParts[0].equals("PRIVATE")) {    
       _messageType = MessageType.PRIVATE;
       _messageFirstPart = msgParts[1];
-      _messageSecondPart = msgParts[2];
+      _messageFirstPart = msgParts[1];
+      String finalMessage = "";
+      for (int i = 2; i < msgParts.length; i ++) {
+        if (i > 2) finalMessage += " ";
+        finalMessage += msgParts[i];
+      }
+      _messageSecondPart = finalMessage;
     }
     
     return (new ChatMessage(_messageType, _messageFirstPart, _messageSecondPart));
