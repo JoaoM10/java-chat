@@ -97,6 +97,8 @@ public class ChatMessage {
         break;
       }
     }
+
+    finalMsg += "\n";
     
     return finalMsg;
   }
@@ -116,11 +118,11 @@ public class ChatMessage {
     } else if (msgParts[0].equals("MESSAGE")) {
       _messageType = MessageType.MESSAGE;
       _messageFirstPart = msgParts[1];
-      _messageFirstPart = msgParts[2];
+      _messageSecondPart = msgParts[2];
     } else if (msgParts[0].equals("NEWNICK")) {
       _messageType = MessageType.NEWNICK;
       _messageFirstPart = msgParts[1];
-      _messageFirstPart = msgParts[2];
+      _messageSecondPart = msgParts[2];
     } else if (msgParts[0].equals("JOINED")) {
       _messageType = MessageType.JOINED;
       _messageFirstPart = msgParts[1];
@@ -132,7 +134,7 @@ public class ChatMessage {
     } else if (msgParts[0].equals("PRIVATE")) {    
       _messageType = MessageType.PRIVATE;
       _messageFirstPart = msgParts[1];
-      _messageFirstPart = msgParts[2];
+      _messageSecondPart = msgParts[2];
     }
     
     return (new ChatMessage(_messageType, _messageFirstPart, _messageSecondPart));

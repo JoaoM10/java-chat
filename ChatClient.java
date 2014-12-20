@@ -54,7 +54,7 @@ public class ChatClient {
 
   // Message printer (to chat)
   public void printMessage(final ChatMessage message) {
-    printMessage(message.toString());
+    printMessage(message.toString(true));
   }
   
   // Initializer: GUI and Server Connection
