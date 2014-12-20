@@ -203,8 +203,9 @@ public class ChatServer {
   }
 
   // Send error message to user
-  private static void sendError(ChatUser to, String message) throws IOException  {
-    ChatMessage chatMessage = new ChatMessage(MessageType.ERROR, message, "");
+  private static void sendError(ChatUser to, String message) throws IOException {
+    //ChatMessage chatMessage = new ChatMessage(MessageType.ERROR, message, "");
+    ChatMessage chatMessage = new ChatMessage(MessageType.ERROR, "", "");
     sendMessage(to.getSocketChannel(), chatMessage);
   }
 

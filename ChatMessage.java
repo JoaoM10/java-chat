@@ -139,7 +139,6 @@ public class ChatMessage {
     } else if (msgParts[0].equals("PRIVATE")) {    
       _messageType = MessageType.PRIVATE;
       _messageFirstPart = msgParts[1];
-      _messageFirstPart = msgParts[1];
       String finalMessage = "";
       for (int i = 2; i < msgParts.length; i ++) {
         if (i > 2) finalMessage += " ";
