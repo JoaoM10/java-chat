@@ -60,6 +60,14 @@ public class ChatUser implements Comparable<ChatUser> {
     return this.room;
   }
 
+  public void leftRoom() {
+    this.room = null;
+  }
+
+  public void joinRoom(ChatRoom newRoom) {
+    this.room = newRoom;
+  }
+
   public SocketChannel getSocketChannel() {
     return this.socketChannel;
   }

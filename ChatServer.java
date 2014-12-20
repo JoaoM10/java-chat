@@ -286,6 +286,7 @@ public class ChatServer {
         if (usersSameRoom.length == 0)
           rooms.remove(senderRoom.getName());
 
+        sender.leftRoom();
         sender.setState(UserState.OUTSIDE);
       }
       
@@ -302,7 +303,8 @@ public class ChatServer {
       ChatUser[] usersSameRoom = senderRoom.getUsers();
       for (ChatUser to : usersSameRoom)
           sendMessage(to.getSocketChannel(), chatMessage);  
-      
+
+      sender.joinRoom(senderRoom);
       senderRoom.userJoin(sender);
       sender.setState(UserState.INSIDE);
       sendOk(sender);
@@ -322,6 +324,7 @@ public class ChatServer {
         if (usersSameRoom.length == 0)
           rooms.remove(senderRoom.getName());
 
+        sender.leftRoom();
         sender.setState(UserState.OUTSIDE);
         sendOk(sender);
         
@@ -369,7 +372,8 @@ public class ChatServer {
   // Process message (not a command)
   private static void processMessage(String message, ChatUser sender) throws IOException  {
     if (sender.getState() == UserState.INSIDE) {
-      ChatUser[] usersSameRoom = sender.getRoom().getUsers();
+      ChatRoom senderRoom = sender.getRoom();
+      ChatUser[] usersSameRoom = senderRoom.getUsers();
       for (ChatUser to : usersSameRoom){
         ChatMessage chatMessage = new ChatMessage(MessageType.MESSAGE, sender.getNick(), message);
         sendMessage(to.getSocketChannel(), chatMessage);
