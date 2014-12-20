@@ -399,7 +399,7 @@ public class ChatServer {
     String message = decoder.decode(inBuffer).toString().trim();
     ChatUser sender = users.get(socketChannel);
 
-    if(message.charAt(0) == '/')
+    if(message.length() > 0 && message.charAt(0) == '/')
       processCommand(message, sender);
     else
       processMessage(message, sender);
