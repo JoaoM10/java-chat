@@ -10,7 +10,7 @@ How to compile?
 =========
 Run:  
 `$ make`  
-or
+or  
 `$make chat`  
 
 You can also remove the generated classes by running:  
