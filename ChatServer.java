@@ -385,8 +385,12 @@ public class ChatServer {
     String message = decoder.decode(inBuffer).toString().trim();
     ChatUser sender = users.get(socketChannel);
 
-    if(message.length() > 0 && message.charAt(0) == '/')
-      processCommand(message, sender);
+    if(message.length() > 0 && message.charAt(0) == '/'){
+      if(message.length() > 1 && message.charAt(1) == '/')
+        processMessage(message.substring(1), sender);
+      else
+        processCommand(message, sender);
+    }
     else
       processMessage(message, sender);
   
